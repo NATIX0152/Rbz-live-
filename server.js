@@ -12,7 +12,7 @@ async function disconnect() { if (conn) { try { conn.disconnect(); } catch {} co
 async function connect(username) {
   await disconnect();
   username = username.replace(/^@/, '').trim();
-  conn = new TikTokLiveConnection(username);
+  conn = new TikTokLiveConnection(username, process.env.EULER_API_KEY ? { signApiKey: process.env.EULER_API_KEY } : {});
   conn.on(WebcastEvent.GIFT, d => {
     // Cadeaux "à série" (roses, etc.) : on ne compte qu'à la fin de la série pour ne pas compter deux fois.
     if (d.giftType === 1 && d.repeatEnd === false) return;

@@ -18,3 +18,8 @@ Node (Render, Railway, Fly.io…) : commande de démarrage `npm start`.
 
 Cadeaux « à série » (roses…) : comptés une seule fois, à la fin de la série. `DEBUG=1 npm start` affiche
 les cadeaux reçus dans la console.
+
+## Clé API Euler Stream (optionnelle, recommandée)
+La signature de la connexion passe par Euler Stream. Avec une clé (gratuite sur eulerstream.com), c'est plus fiable,
+surtout une fois hébergé. Ne la mets jamais dans le code : définis la variable d'environnement `EULER_API_KEY`
+(`EULER_API_KEY=ta_cle npm start`, ou dans les variables de ton hébergeur).
