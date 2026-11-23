@@ -61,14 +61,9 @@
         <button class="btn" id="btn-start">▶ Démarrer l'enchère</button>
       </div>
       <div class="card">
-        <h3>Cadeaux en direct</h3>
+        <h3>Cadeaux en direct (lus par le bot)</h3>
         <div class="feed" id="feed"></div>
-        <div class="row">
-          <input id="sim-user" placeholder="@pseudo" value="@viewer1">
-          <input id="sim-amount" type="number" placeholder="Coins" value="50">
-          <button class="btn ghost" id="btn-gift">🎁 Simuler un cadeau</button>
-        </div>
-        <small class="muted">Mode démo : en live réel, les cadeaux TikTok sont lus par le connecteur (voir README).</small>
+        <small class="muted" id="live-warn">⚠ Pas connecté au live : va dans Paramètres TikTok. Les cadeaux envoyés par tes spectateurs sont lus automatiquement par le bot.</small>
       </div>
     </div>
   </section>

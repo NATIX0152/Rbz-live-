@@ -1,0 +1,23 @@
+{
+  "name": "rbz-live",
+  "version": "1.0.0",
+  "description": "Ench\u00e8res de coins TikTok Live",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NATIX0152/Rbz-live-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NATIX0152/Rbz-live-/issues"
+  },
+  "homepage": "https://github.com/NATIX0152/Rbz-live-#readme",
+  "dependencies": {
+    "tiktok-live-connector": "^2.5.0"
+  }
+}

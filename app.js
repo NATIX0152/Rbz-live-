@@ -62,20 +62,34 @@ sf.onsubmit = e => {
   }
   save('settings', settings); $('#saved').textContent = '✔ Enregistré'; setTimeout(() => $('#saved').textContent = '', 2000); renderAll();
 };
-let connected = false;
+let connected = false, connErr = '';
 function renderConn() {
   const u = settings.username || '';
   $('#side-status').innerHTML = `<i class="dot ${connected ? '' : 'off'}"></i> ${connected ? 'Connecté ' + esc(u) : 'TikTok déconnecté'}`;
-  $('#conn-status').textContent = connected ? '🟢 Connecté à ' + u : 'Déconnecté';
+  $('#conn-status').textContent = connected ? '🟢 Connecté à ' + u + ' — les cadeaux sont comptés automatiquement' : (connErr || 'Déconnecté');
   $('#btn-connect').textContent = connected ? 'Se déconnecter' : 'Se connecter au live';
+  $('#live-warn').hidden = connected;
 }
-$('#btn-connect').onclick = () => {
-  if (!connected && !sf.elements.username.value.trim()) return alert('Entre ton nom d\'utilisateur TikTok.');
-  settings.username = sf.elements.username.value.trim();
-  save('settings', settings);
-  connected = !connected; // démo : brancher ici tiktok-live-connector côté serveur
-  renderConn();
+$('#btn-connect').onclick = async () => {
+  if (connected) { await fetch('/api/disconnect', { method: 'POST' }); return; }
+  const u = sf.elements.username.value.trim();
+  if (!u) { connErr = 'Entre ton nom d\'utilisateur TikTok.'; return renderConn(); }
+  settings.username = u; save('settings', settings);
+  connErr = 'Connexion…'; renderConn();
+  try {
+    const r = await fetch('/api/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u }) });
+    if (!r.ok) throw new Error((await r.json()).error);
+  } catch (e) { connErr = '❌ ' + (e.message === 'Failed to fetch' ? 'Serveur introuvable : lance le site avec « npm start » (voir README)' : e.message); renderConn(); }
 };
+// Flux temps réel du serveur : statut + cadeaux TikTok
+try {
+  const es = new EventSource('/events');
+  es.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.type === 'status') { connected = m.connected; connErr = m.error ? '⚠ ' + m.error : ''; if (m.username) { settings.username = m.username; } renderConn(); }
+    if (m.type === 'gift') window.onTikTokGift(m.user, m.coins);
+  };
+} catch {}
 
 // ---------- Auction ----------
 const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
@@ -135,6 +149,5 @@ window.onTikTokGift = (user, coinValue) => {
   }
   drawAuction();
 };
-$('#btn-gift').onclick = () => window.onTikTokGift($('#sim-user').value || '@viewer', +$('#sim-amount').value);
 
 fillSettings(); route(); drawAuction();
