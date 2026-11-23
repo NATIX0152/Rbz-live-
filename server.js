@@ -13,11 +13,15 @@ async function connect(username) {
   await disconnect();
   username = username.replace(/^@/, '').trim();
   conn = new TikTokLiveConnection(username, process.env.EULER_API_KEY ? { signApiKey: process.env.EULER_API_KEY } : {});
+  // Chaque cadeau est compté dès qu'il arrive. Pour les séries (roses...), on ajoute seulement l'écart depuis le dernier événement.
+  const streaks = new Map();
   conn.on(WebcastEvent.GIFT, d => {
-    // Cadeaux "à série" (roses, etc.) : on ne compte qu'à la fin de la série pour ne pas compter deux fois.
-    if (d.giftType === 1 && d.repeatEnd === false) return;
-    const unit = d.diamondCount ?? d.giftDetails?.diamondCount ?? 0; // = prix du cadeau en coins
-    const coins = unit * (d.repeatCount || 1);
+    const unit = d.diamondCount ?? d.giftDetails?.diamondCount ?? 0; // prix du cadeau en coins
+    const key = (d.user?.userId || d.user?.uniqueId) + ':' + d.giftId;
+    const rep = d.repeatCount || 1;
+    let n = rep;
+    if (d.giftType === 1) { n = rep - (streaks.get(key) || 0); if (d.repeatEnd) streaks.delete(key); else streaks.set(key, rep); }
+    const coins = unit * Math.max(n, 0);
     if (process.env.DEBUG) console.log('GIFT', d.user?.uniqueId, coins, JSON.stringify(d).slice(0, 300));
     if (coins > 0) send('gift', { user: '@' + (d.user?.uniqueId || 'inconnu'), coins, giftName: d.giftName || d.giftDetails?.giftName || '' });
   });

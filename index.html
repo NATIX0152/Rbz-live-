@@ -12,7 +12,6 @@
   <nav>
     <a href="#dashboard" data-page="dashboard">📊 Tableau de bord</a>
     <a href="#live" data-page="live">🔴 Enchère live</a>
-    <a href="#coins" data-page="coins">🪙 Mes pièces</a>
     <a href="#history" data-page="history">🧾 Historique</a>
     <a href="#tiktok-settings" data-page="tiktok-settings">⚙️ Paramètres TikTok</a>
   </nav>
@@ -26,13 +25,12 @@
     <div class="grid stats">
       <div class="card"><small>Enchères terminées</small><b id="st-count">0</b></div>
       <div class="card"><small>Total de coins gagnés</small><b id="st-total">0 coins</b></div>
-      <div class="card"><small>Pièces en stock</small><b id="st-stock">0</b></div>
       <div class="card"><small>Meilleure vente</small><b id="st-best">–</b></div>
     </div>
     <div class="card"><h3>Démarrage rapide</h3>
       <ol><li>Connecte ton compte dans <a href="#tiktok-settings">Paramètres TikTok</a>.</li>
-      <li>Ajoute tes pièces dans <a href="#coins">Mes pièces</a>.</li>
-      <li>Lance une enchère depuis <a href="#live">Enchère live</a> pendant ton live.</li></ol>
+      <li>Ajoute tes pièces dans.</li>
+      <li>Lance le comptage depuis <a href="#live">Enchère live</a> pendant ton live.</li></ol>
     </div>
   </section>
 
@@ -41,12 +39,10 @@
     <h1>Enchère live</h1>
     <div class="grid two">
       <div class="card auction">
-        <div id="lot-empty">Aucune enchère en cours.</div>
+        <div id="lot-empty">Aucune enchère en cours. Connecte-toi (Paramètres TikTok) puis démarre le comptage.</div>
         <div id="lot-active" hidden>
           <div class="badge ok" id="badge-min"></div>
           <div class="badge"><span>🛡 SNIPE DELAY</span><em id="badge-snipe"></em></div>
-          <div class="lot-emoji" id="lot-emoji">🪙</div>
-          <h2 id="lot-name"></h2>
           <div class="timerbox"><span id="lot-timer-label">TEMPS RESTANT</span><div class="timer" id="lot-timer">00:00</div></div>
           <div id="lb"></div>
           <div class="muted" id="lb-total"></div>
@@ -56,9 +52,7 @@
           </div>
         </div>
         <hr>
-        <label>Lancer une pièce
-          <select id="lot-select"></select></label>
-        <button class="btn" id="btn-start">▶ Démarrer l'enchère</button>
+        <button class="btn" id="btn-start">▶ Démarrer le comptage</button>
       </div>
       <div class="card">
         <h3>Cadeaux en direct (lus par le bot)</h3>
@@ -68,22 +62,10 @@
     </div>
   </section>
 
-  <!-- Coins -->
-  <section id="page-coins" class="page">
-    <h1>Mes pièces</h1>
-    <form class="card row wrap" id="coin-form">
-      <input name="name" placeholder="Nom (ex: 2 € Commémorative 2012)" required>
-      <input name="emoji" placeholder="Emoji" value="🪙" maxlength="2" style="width:70px">
-      <input name="start" type="number" min="0" step="1" placeholder="Départ (coins TikTok)" required>
-      <button class="btn">Ajouter</button>
-    </form>
-    <div class="grid cards" id="coin-list"></div>
-  </section>
-
   <!-- History -->
   <section id="page-history" class="page">
     <h1>Historique</h1>
-    <div class="card"><table><thead><tr><th>Date</th><th>Pièce</th><th>Gagnant</th><th>Prix</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+    <div class="card"><table><thead><tr><th>Date</th><th>Enchère</th><th>Gagnant</th><th>Prix</th></tr></thead><tbody id="hist-body"></tbody></table></div>
   </section>
 
   <!-- TikTok settings -->

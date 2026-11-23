@@ -4,10 +4,6 @@ const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 // Les enchères sont en pièces TikTok (coins)
 const eur = n => Number(n).toLocaleString('fr-FR') + ' coins';
 
-let coins = load('coins', [
-  { id: 1, name: '2 € Commémorative 2012', emoji: '🪙', start: 50 },
-  { id: 2, name: '1 Franc Semeuse 1960', emoji: '🥈', start: 30 },
-]);
 let history = load('history', []);
 let settings = { ...{ username: '', minimum: 0, duration: 60, snipe: 30, sound: true }, ...load('settings', {}) };
 let auction = null, tick = null;
@@ -26,24 +22,12 @@ function renderAll() {
   $('#st-count').textContent = history.length;
   const total = history.reduce((s, h) => s + h.price, 0);
   $('#st-total').textContent = eur(total);
-  $('#st-stock').textContent = coins.length;
   $('#st-best').textContent = history.length ? eur(Math.max(...history.map(h => h.price))) : '–';
 
-  $('#coin-list').innerHTML = coins.map(c => `<div class="card coin"><div class="e">${c.emoji}</div><b>${esc(c.name)}</b><br><small class="muted">Départ : ${eur(c.start)}</small><br><button class="btn ghost" onclick="delCoin(${c.id})">Supprimer</button></div>`).join('') || '<p class="muted">Aucune pièce.</p>';
-  $('#lot-select').innerHTML = coins.map(c => `<option value="${c.id}">${c.emoji} ${esc(c.name)} (${eur(c.start)})</option>`).join('');
-  $('#hist-body').innerHTML = history.slice().reverse().map(h => `<tr><td>${new Date(h.date).toLocaleString('fr-FR')}</td><td>${esc(h.coin)}</td><td>${esc(h.winner || '—')}</td><td>${eur(h.price)}</td></tr>`).join('') || '<tr><td colspan=4 class="muted">Aucune vente.</td></tr>';
+  $('#hist-body').innerHTML = history.slice().reverse().map(h => `<tr><td>${new Date(h.date).toLocaleString('fr-FR')}</td><td>${esc(h.coin || 'Enchère')}</td><td>${esc(h.winner || '—')}</td><td>${eur(h.price)}</td></tr>`).join('') || '<tr><td colspan=4 class="muted">Aucune vente.</td></tr>';
     renderConn();
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-// ---------- Coins ----------
-$('#coin-form').onsubmit = e => {
-  e.preventDefault();
-  const f = new FormData(e.target);
-  coins.push({ id: Date.now(), name: f.get('name'), emoji: f.get('emoji') || '🪙', start: +f.get('start') });
-  save('coins', coins); e.target.reset(); renderAll();
-};
-window.delCoin = id => { coins = coins.filter(c => c.id !== id); save('coins', coins); renderAll(); };
 
 // ---------- Settings ----------
 const sf = $('#settings-form');
@@ -104,8 +88,6 @@ function drawAuction() {
   $('#lot-empty').hidden = !!auction; $('#lot-active').hidden = !auction;
   if (!auction) return;
   const min = settings.minimum;
-  $('#lot-emoji').textContent = auction.coin.emoji;
-  $('#lot-name').textContent = auction.coin.name;
   $('#badge-min').textContent = min > 0 ? '✅ MINIMUM ' + eur(min) : '✅ AUCUN MINIMUM';
   $('#badge-snipe').textContent = settings.snipe + ' S';
   const sniping = auction.left <= settings.snipe;
@@ -119,9 +101,8 @@ function drawAuction() {
 }
 $('#btn-start').onclick = () => {
   if (auction) return alert('Une enchère est déjà en cours.');
-  const coin = coins.find(c => c.id == $('#lot-select').value); if (!coin) return;
-  auction = { coin, left: settings.duration, gifted: {}, snipeHit: false };
-  log(`🔔 Enchère ouverte : <b>${esc(coin.name)}</b> — comptage ${fmt(settings.duration)}, minimum ${settings.minimum > 0 ? eur(settings.minimum) : 'aucun'}`);
+  auction = { left: settings.duration, gifted: {}, snipeHit: false };
+  log(`🔔 Comptage ouvert :  ${fmt(settings.duration)}, minimum ${settings.minimum > 0 ? eur(settings.minimum) : 'aucun'}`);
   tick = setInterval(() => { if (--auction.left <= 0) endAuction(); else drawAuction(); }, 1000);
   drawAuction();
 };
@@ -129,7 +110,7 @@ function endAuction() {
   clearInterval(tick); if (!auction) return;
   const a = auction; auction = null;
   const top = Object.entries(a.gifted).sort((x, y) => y[1] - x[1]).find(r => r[1] >= settings.minimum && r[1] > 0);
-  history.push({ date: Date.now(), coin: a.coin.name, winner: top && top[0], price: top ? top[1] : 0 });
+  history.push({ date: Date.now(), coin: 'Enchère', winner: top && top[0], price: top ? top[1] : 0 });
   save('history', history);
   log(top ? `🏆 Gagnant : ${esc(top[0])} avec ${eur(top[1])} !` : '⏹ Terminé : personne n\'a atteint le minimum.', 'win');
   drawAuction(); renderAll();
