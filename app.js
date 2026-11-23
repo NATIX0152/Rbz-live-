@@ -62,8 +62,10 @@ $('#btn-connect').onclick = async () => {
   connErr = 'Connexion…'; renderConn();
   try {
     const r = await fetch('/api/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u }) });
-    if (!r.ok) throw new Error((await r.json()).error);
-  } catch (e) { connErr = '❌ ' + (e.message === 'Failed to fetch' ? 'Serveur introuvable : lance le site avec « npm start » (voir README)' : e.message); renderConn(); }
+    const j = await r.json().catch(() => null);
+    if (!j) throw new Error('NOSERVER');
+    if (!r.ok) throw new Error(j.error);
+  } catch (e) { connErr = '❌ ' + (['Failed to fetch', 'NOSERVER', 'Load failed'].includes(e.message) ? 'Le serveur du bot ne répond pas : ouvre le site depuis ton serveur (npm start ou Render), pas depuis l\'aperçu Claude' : e.message); renderConn(); }
 };
 // Flux temps réel du serveur : statut + cadeaux TikTok
 try {
