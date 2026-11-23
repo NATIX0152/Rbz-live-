@@ -94,7 +94,7 @@ function drawAuction() {
   $('#lot-name').textContent = auction.coin.name;
   $('#badge-min').textContent = min > 0 ? '✅ MINIMUM ' + eur(min) : '✅ AUCUN MINIMUM';
   $('#badge-snipe').textContent = settings.snipe + ' S';
-  const sniping = auction.left <= settings.snipe && auction.snipeHit;
+  const sniping = auction.left <= settings.snipe;
   $('#lot-timer-label').textContent = sniping ? 'SNIPE DELAY' : 'TEMPS RESTANT';
   $('#lot-timer').textContent = fmt(auction.left);
   $('#lot-timer').classList.toggle('low', auction.left <= 10);
