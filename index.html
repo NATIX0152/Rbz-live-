@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RBZ Live – Enchères de pièces sur TikTok</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="logo">🪙 RBZ<span>Live</span></div>
+  <nav>
+    <a href="#dashboard" data-page="dashboard">📊 Tableau de bord</a>
+    <a href="#live" data-page="live">🔴 Enchère live</a>
+    <a href="#coins" data-page="coins">🪙 Mes pièces</a>
+    <a href="#history" data-page="history">🧾 Historique</a>
+    <a href="#tiktok-settings" data-page="tiktok-settings">⚙️ Paramètres TikTok</a>
+  </nav>
+  <div class="status" id="side-status"><i class="dot off"></i> TikTok déconnecté</div>
+</aside>
+
+<main>
+  <!-- Dashboard -->
+  <section id="page-dashboard" class="page">
+    <h1>Tableau de bord</h1>
+    <div class="grid stats">
+      <div class="card"><small>Enchères terminées</small><b id="st-count">0</b></div>
+      <div class="card"><small>Chiffre d'affaires</small><b id="st-total">0 €</b></div>
+      <div class="card"><small>Pièces en stock</small><b id="st-stock">0</b></div>
+      <div class="card"><small>Meilleure vente</small><b id="st-best">–</b></div>
+    </div>
+    <div class="card"><h3>Démarrage rapide</h3>
+      <ol><li>Connecte ton compte dans <a href="#tiktok-settings">Paramètres TikTok</a>.</li>
+      <li>Ajoute tes pièces dans <a href="#coins">Mes pièces</a>.</li>
+      <li>Lance une enchère depuis <a href="#live">Enchère live</a> pendant ton live.</li></ol>
+    </div>
+  </section>
+
+  <!-- Live -->
+  <section id="page-live" class="page">
+    <h1>Enchère live</h1>
+    <div class="grid two">
+      <div class="card auction">
+        <div id="lot-empty">Aucune enchère en cours.</div>
+        <div id="lot-active" hidden>
+          <div class="lot-emoji" id="lot-emoji">🪙</div>
+          <h2 id="lot-name"></h2>
+          <div class="timer" id="lot-timer">00:00</div>
+          <div class="bid">Enchère actuelle : <b id="lot-bid"></b></div>
+          <div class="bidder" id="lot-bidder">Aucune offre</div>
+          <div class="row">
+            <button class="btn red" id="btn-end">Terminer maintenant</button>
+            <button class="btn ghost" id="btn-plus">+10 s</button>
+          </div>
+        </div>
+        <hr>
+        <label>Lancer une pièce
+          <select id="lot-select"></select></label>
+        <button class="btn" id="btn-start">▶ Démarrer l'enchère</button>
+      </div>
+      <div class="card">
+        <h3>Chat / offres en direct</h3>
+        <div class="feed" id="feed"></div>
+        <div class="row">
+          <input id="sim-user" placeholder="@pseudo" value="@viewer1">
+          <input id="sim-amount" type="number" placeholder="Montant" value="10">
+          <button class="btn ghost" id="btn-sim">Simuler une offre</button>
+        </div>
+        <small class="muted">Mode démo : en live réel, les commentaires TikTok du type <code id="kw-hint">!bid 25</code> sont lus par le connecteur (voir README).</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- Coins -->
+  <section id="page-coins" class="page">
+    <h1>Mes pièces</h1>
+    <form class="card row wrap" id="coin-form">
+      <input name="name" placeholder="Nom (ex: 2 € Commémorative 2012)" required>
+      <input name="emoji" placeholder="Emoji" value="🪙" maxlength="2" style="width:70px">
+      <input name="start" type="number" min="0" step="0.5" placeholder="Prix de départ €" required>
+      <button class="btn">Ajouter</button>
+    </form>
+    <div class="grid cards" id="coin-list"></div>
+  </section>
+
+  <!-- History -->
+  <section id="page-history" class="page">
+    <h1>Historique</h1>
+    <div class="card"><table><thead><tr><th>Date</th><th>Pièce</th><th>Gagnant</th><th>Prix</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+  </section>
+
+  <!-- TikTok settings -->
+  <section id="page-tiktok-settings" class="page">
+    <h1>Paramètres TikTok</h1>
+    <form id="settings-form">
+      <div class="card">
+        <h3>Compte TikTok</h3>
+        <label>Nom d'utilisateur TikTok
+          <input name="username" placeholder="@moncompte"></label>
+        <div class="row">
+          <button type="button" class="btn" id="btn-connect">Se connecter au live</button>
+          <span id="conn-status" class="muted">Déconnecté</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Règles d'enchère</h3>
+        <div class="grid two">
+          <label>Mot-clé d'offre <input name="keyword" value="!bid"></label>
+          <label>Incrément minimum (€) <input name="increment" type="number" min="0.5" step="0.5" value="1"></label>
+          <label>Durée par défaut (secondes) <input name="duration" type="number" min="10" value="60"></label>
+          <label>Anti-sniper : +secondes si offre dans les 10 dernières <input name="snipe" type="number" min="0" value="10"></label>
+        </div>
+        <label class="check"><input type="checkbox" name="numberOnly"> Accepter aussi un simple nombre comme offre (ex : « 25 »)</label>
+        <label class="check"><input type="checkbox" name="gifts"> Les cadeaux TikTok comptent comme offres</label>
+        <label class="check"><input type="checkbox" name="sound" checked> Son à chaque nouvelle offre</label>
+      </div>
+      <div class="card">
+        <h3>Overlay OBS / TikTok Live Studio</h3>
+        <label>URL à ajouter en source navigateur
+          <input id="overlay-url" readonly></label>
+        <small class="muted">Affiche la pièce, le chrono et la meilleure offre sur ton live.</small>
+      </div>
+      <button class="btn big">💾 Enregistrer</button> <span id="saved" class="muted"></span>
+    </form>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
