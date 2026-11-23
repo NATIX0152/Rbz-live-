@@ -9,7 +9,7 @@ let coins = load('coins', [
   { id: 2, name: '1 Franc Semeuse 1960', emoji: '🥈', start: 30 },
 ]);
 let history = load('history', []);
-let settings = load('settings', { username: '', keyword: '!bid', increment: 5, duration: 60, snipe: 10, numberOnly: false, gifts: true, sound: true });
+let settings = { ...{ username: '', minimum: 0, duration: 60, snipe: 30, sound: true }, ...load('settings', {}) };
 let auction = null, tick = null;
 
 // ---------- Navigation ----------
@@ -32,8 +32,7 @@ function renderAll() {
   $('#coin-list').innerHTML = coins.map(c => `<div class="card coin"><div class="e">${c.emoji}</div><b>${esc(c.name)}</b><br><small class="muted">Départ : ${eur(c.start)}</small><br><button class="btn ghost" onclick="delCoin(${c.id})">Supprimer</button></div>`).join('') || '<p class="muted">Aucune pièce.</p>';
   $('#lot-select').innerHTML = coins.map(c => `<option value="${c.id}">${c.emoji} ${esc(c.name)} (${eur(c.start)})</option>`).join('');
   $('#hist-body').innerHTML = history.slice().reverse().map(h => `<tr><td>${new Date(h.date).toLocaleString('fr-FR')}</td><td>${esc(h.coin)}</td><td>${esc(h.winner || '—')}</td><td>${eur(h.price)}</td></tr>`).join('') || '<tr><td colspan=4 class="muted">Aucune vente.</td></tr>';
-  $('#kw-hint').textContent = settings.keyword + ' 250';
-  renderConn();
+    renderConn();
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -85,58 +84,57 @@ function beep() {
   if (!settings.sound) return;
   try { const c = new AudioContext(), o = c.createOscillator(); o.connect(c.destination); o.frequency.value = 880; o.start(); o.stop(c.currentTime + .12); } catch {}
 }
+const MEDALS = ['🥇', '🥈', '🥉'];
+const ranking = () => Object.entries(auction.gifted).sort((x, y) => y[1] - x[1]);
 function drawAuction() {
   $('#lot-empty').hidden = !!auction; $('#lot-active').hidden = !auction;
   if (!auction) return;
+  const min = settings.minimum;
   $('#lot-emoji').textContent = auction.coin.emoji;
   $('#lot-name').textContent = auction.coin.name;
+  $('#badge-min').textContent = min > 0 ? '✅ MINIMUM ' + eur(min) : '✅ AUCUN MINIMUM';
+  $('#badge-snipe').textContent = settings.snipe + ' S';
+  const sniping = auction.left <= settings.snipe && auction.snipeHit;
+  $('#lot-timer-label').textContent = sniping ? 'SNIPE DELAY' : 'TEMPS RESTANT';
   $('#lot-timer').textContent = fmt(auction.left);
   $('#lot-timer').classList.toggle('low', auction.left <= 10);
-  $('#lot-bid').textContent = eur(auction.bid);
-  $('#lot-bidder').textContent = auction.bidder ? '👑 ' + auction.bidder : 'Aucune offre';
+  const all = ranking(), ok = all.filter(r => r[1] >= min), below = all.filter(r => r[1] < min);
+  const row = (r, i, dim) => `<div class="lb-row ${dim ? 'dim' : 'rank' + i}"><span class="medal">${dim ? '•' : (MEDALS[i] || (i + 1))}</span><div><b>${esc(r[0])}</b><div class="coins">${r[1].toLocaleString('fr-FR')} 🟡${dim ? ' <small>(sous le minimum, non compté)</small>' : ''}</div></div></div>`;
+  $('#lb').innerHTML = ok.map((r, i) => row(r, i)).join('') + below.map(r => row(r, 0, true)).join('') || '<p class="muted">En attente de cadeaux…</p>';
+  $('#lb-total').textContent = '👥 Total participants : ' + all.length;
 }
 $('#btn-start').onclick = () => {
   if (auction) return alert('Une enchère est déjà en cours.');
   const coin = coins.find(c => c.id == $('#lot-select').value); if (!coin) return;
-  auction = { coin, bid: coin.start, bidder: null, left: settings.duration, gifted: {} };
-  log(`🔔 Enchère ouverte : <b>${esc(coin.name)}</b> à ${eur(coin.start)}`);
+  auction = { coin, left: settings.duration, gifted: {}, snipeHit: false };
+  log(`🔔 Enchère ouverte : <b>${esc(coin.name)}</b> — comptage ${fmt(settings.duration)}, minimum ${settings.minimum > 0 ? eur(settings.minimum) : 'aucun'}`);
   tick = setInterval(() => { if (--auction.left <= 0) endAuction(); else drawAuction(); }, 1000);
   drawAuction();
 };
 function endAuction() {
   clearInterval(tick); if (!auction) return;
   const a = auction; auction = null;
-  history.push({ date: Date.now(), coin: a.coin.name, winner: a.bidder, price: a.bidder ? a.bid : 0 });
+  const top = Object.entries(a.gifted).sort((x, y) => y[1] - x[1]).find(r => r[1] >= settings.minimum && r[1] > 0);
+  history.push({ date: Date.now(), coin: a.coin.name, winner: top && top[0], price: top ? top[1] : 0 });
   save('history', history);
-  log(a.bidder ? `🏆 Vendu à ${esc(a.bidder)} pour ${eur(a.bid)} !` : '⏹ Terminé sans offre.', 'win');
+  log(top ? `🏆 Gagnant : ${esc(top[0])} avec ${eur(top[1])} !` : '⏹ Terminé : personne n\'a atteint le minimum.', 'win');
   drawAuction(); renderAll();
 }
 $('#btn-end').onclick = endAuction;
 $('#btn-plus').onclick = () => { if (auction) { auction.left += 10; drawAuction(); } };
 
-function placeBid(user, amount) {
-  if (!auction) return log(`${esc(user)} : offre ignorée (pas d'enchère)`, 'no');
-  const min = auction.bidder ? auction.bid + settings.increment : auction.bid;
-  if (amount < min) return log(`${esc(user)} : ${eur(amount)} refusé (min ${eur(min)})`, 'no');
-  auction.bid = amount; auction.bidder = user;
-  if (auction.left <= 10) auction.left += settings.snipe;
-  log(`💰 ${esc(user)} → <b>${eur(amount)}</b>`, 'ok'); beep(); drawAuction();
-}
-// Cadeau TikTok reçu : sa valeur en coins s'additionne au total offert par ce spectateur
+// Cadeau TikTok reçu : ajoute sa valeur en coins au total du spectateur, uniquement pendant le temps de comptage
 window.onTikTokGift = (user, coinValue) => {
-  if (!settings.gifts || !auction) return;
+  if (!auction || !(coinValue > 0)) return;
   const t = auction.gifted[user] = (auction.gifted[user] || 0) + coinValue;
-  log(`🎁 ${esc(user)} a offert ${eur(coinValue)} (total ${eur(t)})`);
-  if (t > auction.bid || !auction.bidder) placeBid(user, t);
+  const counted = t >= settings.minimum;
+  log(`🎁 ${esc(user)} +${eur(coinValue)} (total ${eur(t)})${counted ? '' : ' — sous le minimum'}`, counted ? 'ok' : 'no');
+  if (counted) {
+    beep();
+    if (auction.left < settings.snipe) { auction.left = settings.snipe; auction.snipeHit = true; } // snipe delay
+  }
+  drawAuction();
 };
-// Point d'entrée pour un vrai chat TikTok (ex : relayé par WebSocket depuis ton serveur)
-window.onTikTokComment = (user, text) => {
-  const kw = settings.keyword.toLowerCase(), t = text.trim().toLowerCase();
-  let m = t.startsWith(kw) ? t.slice(kw.length).trim() : (settings.numberOnly ? t : null);
-  const n = m && parseFloat(m.replace(',', '.'));
-  if (n > 0) placeBid(user, n);
-};
-$('#btn-sim').onclick = () => placeBid($('#sim-user').value || '@viewer', +$('#sim-amount').value);
 $('#btn-gift').onclick = () => window.onTikTokGift($('#sim-user').value || '@viewer', +$('#sim-amount').value);
 
 fillSettings(); route(); drawAuction();

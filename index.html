@@ -43,11 +43,13 @@
       <div class="card auction">
         <div id="lot-empty">Aucune enchère en cours.</div>
         <div id="lot-active" hidden>
+          <div class="badge ok" id="badge-min"></div>
+          <div class="badge"><span>🛡 SNIPE DELAY</span><em id="badge-snipe"></em></div>
           <div class="lot-emoji" id="lot-emoji">🪙</div>
           <h2 id="lot-name"></h2>
-          <div class="timer" id="lot-timer">00:00</div>
-          <div class="bid">Enchère actuelle : <b id="lot-bid"></b></div>
-          <div class="bidder" id="lot-bidder">Aucune offre</div>
+          <div class="timerbox"><span id="lot-timer-label">TEMPS RESTANT</span><div class="timer" id="lot-timer">00:00</div></div>
+          <div id="lb"></div>
+          <div class="muted" id="lb-total"></div>
           <div class="row">
             <button class="btn red" id="btn-end">Terminer maintenant</button>
             <button class="btn ghost" id="btn-plus">+10 s</button>
@@ -59,14 +61,14 @@
         <button class="btn" id="btn-start">▶ Démarrer l'enchère</button>
       </div>
       <div class="card">
-        <h3>Chat / offres en direct</h3>
+        <h3>Cadeaux en direct</h3>
         <div class="feed" id="feed"></div>
         <div class="row">
           <input id="sim-user" placeholder="@pseudo" value="@viewer1">
-          <input id="sim-amount" type="number" placeholder="Montant" value="50">
-          <button class="btn ghost" id="btn-sim">Offre</button><button class="btn ghost" id="btn-gift">🎁 Cadeau</button>
+          <input id="sim-amount" type="number" placeholder="Coins" value="50">
+          <button class="btn ghost" id="btn-gift">🎁 Simuler un cadeau</button>
         </div>
-        <small class="muted">Mode démo : en live réel, les commentaires TikTok du type <code id="kw-hint">!bid 250</code> sont lus par le connecteur (voir README).</small>
+        <small class="muted">Mode démo : en live réel, les cadeaux TikTok sont lus par le connecteur (voir README).</small>
       </div>
     </div>
   </section>
@@ -103,22 +105,20 @@
         </div>
       </div>
       <div class="card">
-        <h3>Règles d'enchère</h3>
+        <h3>Règles de comptage des coins</h3>
         <div class="grid two">
-          <label>Mot-clé d'offre <input name="keyword" value="!bid"></label>
-          <label>Incrément minimum (coins) <input name="increment" type="number" min="1" step="1" value="5"></label>
-          <label>Durée par défaut (secondes) <input name="duration" type="number" min="10" value="60"></label>
-          <label>Anti-sniper : +secondes si offre dans les 10 dernières <input name="snipe" type="number" min="0" value="50"></label>
+          <label>Minimum de coins pour compter (0 = aucun minimum) <input name="minimum" type="number" min="0" step="1" value="0"></label>
+          <label>Temps de comptage (secondes) <input name="duration" type="number" min="10" value="60"></label>
+          <label>Snipe delay : le chrono repart à X s si un cadeau compté arrive plus tard <input name="snipe" type="number" min="0" value="30"></label>
         </div>
-        <label class="check"><input type="checkbox" name="numberOnly"> Accepter aussi un simple nombre comme offre (ex : « 25 »)</label>
-        <label class="check"><input type="checkbox" name="gifts" checked> Les cadeaux TikTok comptent en coins (leur valeur s'additionne par spectateur)</label>
-        <label class="check"><input type="checkbox" name="sound" checked> Son à chaque nouvelle offre</label>
+        <small class="muted">Les coins s'additionnent par spectateur pendant le temps de comptage. Tant qu'un spectateur n'a pas atteint le minimum, il n'est pas classé.</small>
+        <label class="check"><input type="checkbox" name="sound" checked> Son à chaque cadeau compté</label>
       </div>
       <div class="card">
         <h3>Overlay OBS / TikTok Live Studio</h3>
         <label>URL à ajouter en source navigateur
           <input id="overlay-url" readonly></label>
-        <small class="muted">Affiche la pièce, le chrono et la meilleure offre sur ton live.</small>
+        <small class="muted">Affiche la pièce, le chrono et le classement sur ton live.</small>
       </div>
       <button class="btn big">💾 Enregistrer</button> <span id="saved" class="muted"></span>
     </form>
