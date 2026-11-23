@@ -25,7 +25,7 @@
     <h1>Tableau de bord</h1>
     <div class="grid stats">
       <div class="card"><small>Enchères terminées</small><b id="st-count">0</b></div>
-      <div class="card"><small>Chiffre d'affaires</small><b id="st-total">0 €</b></div>
+      <div class="card"><small>Total de coins gagnés</small><b id="st-total">0 coins</b></div>
       <div class="card"><small>Pièces en stock</small><b id="st-stock">0</b></div>
       <div class="card"><small>Meilleure vente</small><b id="st-best">–</b></div>
     </div>
@@ -63,10 +63,10 @@
         <div class="feed" id="feed"></div>
         <div class="row">
           <input id="sim-user" placeholder="@pseudo" value="@viewer1">
-          <input id="sim-amount" type="number" placeholder="Montant" value="10">
-          <button class="btn ghost" id="btn-sim">Simuler une offre</button>
+          <input id="sim-amount" type="number" placeholder="Montant" value="50">
+          <button class="btn ghost" id="btn-sim">Offre</button><button class="btn ghost" id="btn-gift">🎁 Cadeau</button>
         </div>
-        <small class="muted">Mode démo : en live réel, les commentaires TikTok du type <code id="kw-hint">!bid 25</code> sont lus par le connecteur (voir README).</small>
+        <small class="muted">Mode démo : en live réel, les commentaires TikTok du type <code id="kw-hint">!bid 250</code> sont lus par le connecteur (voir README).</small>
       </div>
     </div>
   </section>
@@ -77,7 +77,7 @@
     <form class="card row wrap" id="coin-form">
       <input name="name" placeholder="Nom (ex: 2 € Commémorative 2012)" required>
       <input name="emoji" placeholder="Emoji" value="🪙" maxlength="2" style="width:70px">
-      <input name="start" type="number" min="0" step="0.5" placeholder="Prix de départ €" required>
+      <input name="start" type="number" min="0" step="1" placeholder="Départ (coins TikTok)" required>
       <button class="btn">Ajouter</button>
     </form>
     <div class="grid cards" id="coin-list"></div>
@@ -106,12 +106,12 @@
         <h3>Règles d'enchère</h3>
         <div class="grid two">
           <label>Mot-clé d'offre <input name="keyword" value="!bid"></label>
-          <label>Incrément minimum (€) <input name="increment" type="number" min="0.5" step="0.5" value="1"></label>
+          <label>Incrément minimum (coins) <input name="increment" type="number" min="1" step="1" value="5"></label>
           <label>Durée par défaut (secondes) <input name="duration" type="number" min="10" value="60"></label>
-          <label>Anti-sniper : +secondes si offre dans les 10 dernières <input name="snipe" type="number" min="0" value="10"></label>
+          <label>Anti-sniper : +secondes si offre dans les 10 dernières <input name="snipe" type="number" min="0" value="50"></label>
         </div>
         <label class="check"><input type="checkbox" name="numberOnly"> Accepter aussi un simple nombre comme offre (ex : « 25 »)</label>
-        <label class="check"><input type="checkbox" name="gifts"> Les cadeaux TikTok comptent comme offres</label>
+        <label class="check"><input type="checkbox" name="gifts" checked> Les cadeaux TikTok comptent en coins (leur valeur s'additionne par spectateur)</label>
         <label class="check"><input type="checkbox" name="sound" checked> Son à chaque nouvelle offre</label>
       </div>
       <div class="card">

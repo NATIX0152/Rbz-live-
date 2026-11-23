@@ -2,7 +2,7 @@
 
 Dashboard créateur (HTML/CSS/JS, sans dépendance). Ouvre `index.html` dans un navigateur.
 
-- **Paramètres TikTok** : compte, mot-clé d'offre (`!bid 25`), incrément, durée, anti-sniper, overlay.
+- **Paramètres TikTok** : compte, mot-clé d'offre (`!bid 250`), incrément, durée, anti-sniper, overlay.
 - **Enchère live** : chrono, meilleure offre, chat, simulation d'offres.
 - **Mes pièces** / **Historique** / **Tableau de bord** (données en `localStorage`).
 
