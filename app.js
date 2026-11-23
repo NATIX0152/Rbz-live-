@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
-const load = (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d));
-const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 const eur = n => Number(n).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 
 let coins = load('coins', [
