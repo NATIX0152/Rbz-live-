@@ -1,10 +1,10 @@
 // Serveur : sert le site + lit les cadeaux du live TikTok et les pousse au site en temps réel (SSE).
 const http = require('http'), fs = require('fs'), path = require('path');
-const { TikTokLiveConnection, WebcastEvent } = require('tiktok-live-connector');
+const { TikTokLiveConnection, WebcastEvent, ControlEvent } = require('tiktok-live-connector');
 
 const PORT = process.env.PORT || 3000;
 const clients = new Set();
-let conn = null, current = '';
+let conn = null, current = '', stats = { chat: 0, gifts: 0, members: 0 };
 const send = (type, data = {}) => { const m = `data: ${JSON.stringify({ type, ...data })}\n\n`; clients.forEach(c => c.write(m)); };
 
 async function disconnect() { if (conn) { try { conn.disconnect(); } catch {} conn = null; } current = ''; send('status', { connected: false }); }
@@ -26,11 +26,18 @@ async function connect(username) {
     let n = rep;
     if (streakable) { n = rep - (streaks.get(key) || 0); if (d.repeatEnd) streaks.delete(key); else streaks.set(key, rep); }
     const coins = unit * Math.max(n, 0);
+    stats.gifts++; pushStats();
     console.log('GIFT', who, g.name || d.giftId, 'x' + n, '=', coins, 'coins');
     if (coins > 0) send('gift', { user: '@' + who, coins, giftName: g.name || '' });
     else console.warn('Cadeau sans valeur lisible :', JSON.stringify(d, (k, x) => typeof x === 'bigint' ? String(x) : x).slice(0, 400));
   });
-  conn.on(WebcastEvent.DISCONNECTED, () => send('status', { connected: false, error: 'Live déconnecté' }));
+  stats = { chat: 0, gifts: 0, members: 0 };
+  const pushStats = () => send('stats', stats);
+  conn.on(WebcastEvent.CHAT, d => { stats.chat++; pushStats(); send('chat', { user: '@' + (d.user?.uniqueId || d.user?.nickname || '?'), text: d.comment || '' }); });
+  conn.on(WebcastEvent.MEMBER, () => { stats.members++; pushStats(); });
+  conn.on(ControlEvent.WEBSOCKET_CONNECTED, () => console.log('WebSocket TikTok connecté'));
+  conn.on(ControlEvent.ERROR, e => { console.error('Erreur TikTok :', e?.info || e?.message || e); send('status', { connected: !!conn, warn: String(e?.info || e?.message || e) }); });
+  conn.on(ControlEvent.DISCONNECTED, () => send('status', { connected: false, error: 'Live déconnecté' }));
   conn.on(WebcastEvent.STREAM_END, () => send('status', { connected: false, error: 'Le live est terminé' }));
   const state = await conn.connect();
   current = username;
@@ -44,7 +51,7 @@ http.createServer(async (req, res) => {
   if (req.url === '/health') { res.writeHead(200); return res.end('ok'); }
   if (req.url === '/events') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
-    res.write(`data: ${JSON.stringify({ type: 'status', connected: !!conn, username: current })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'status', connected: !!conn, username: current })}\n\n`); res.write(`data: ${JSON.stringify({ type: 'stats', ...stats })}\n\n`);
     clients.add(res); req.on('close', () => clients.delete(res)); return;
   }
   if (req.method === 'POST' && req.url === '/api/connect') {
