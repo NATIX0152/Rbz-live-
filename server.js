@@ -36,8 +36,9 @@ const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
 http.createServer(async (req, res) => {
+  if (req.url === '/health') { res.writeHead(200); return res.end('ok'); }
   if (req.url === '/events') {
-    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
     res.write(`data: ${JSON.stringify({ type: 'status', connected: !!conn, username: current })}\n\n`);
     clients.add(res); req.on('close', () => clients.delete(res)); return;
   }
@@ -53,4 +54,4 @@ http.createServer(async (req, res) => {
   const file = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.split('?')[0]);
   if (!['index.html', 'app.js', 'style.css'].includes(path.relative(__dirname, file))) { res.statusCode = 404; return res.end('Not found'); }
   fs.readFile(file, (e, d) => { if (e) { res.statusCode = 404; return res.end('Not found'); } res.setHeader('Content-Type', types[path.extname(file)] || 'text/plain'); res.end(d); });
-}).listen(PORT, () => console.log(`RBZ Live sur http://localhost:${PORT}`));
+}).listen(PORT, '0.0.0.0', () => console.log(`RBZ Live sur http://localhost:${PORT}`));

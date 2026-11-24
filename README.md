@@ -23,3 +23,10 @@ les cadeaux reçus dans la console.
 La signature de la connexion passe par Euler Stream. Avec une clé (gratuite sur eulerstream.com), c'est plus fiable,
 surtout une fois hébergé. Ne la mets jamais dans le code : définis la variable d'environnement `EULER_API_KEY`
 (`EULER_API_KEY=ta_cle npm start`, ou dans les variables de ton hébergeur).
+
+## Déployer sur Render (gratuit)
+Le dépôt contient un `render.yaml` : sur https://dashboard.render.com → **New → Blueprint** → choisis ce dépôt
+→ **Apply**. (Ou **New → Web Service** avec Build `npm install`, Start `npm start`, plan Free.)
+Tu obtiens un lien `https://rbz-live-xxxx.onrender.com` : ouvre-le, entre le @ du live, et c'est parti.
+Optionnel : ajoute `EULER_API_KEY` dans l'onglet *Environment*. Le plan gratuit s'endort après ~15 min sans visite :
+ouvre le site avant ton live et garde l'onglet ouvert.

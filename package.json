@@ -10,7 +10,6 @@
     "type": "git",
     "url": "git+https://github.com/NATIX0152/Rbz-live-.git"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
@@ -19,5 +18,9 @@
   "homepage": "https://github.com/NATIX0152/Rbz-live-#readme",
   "dependencies": {
     "tiktok-live-connector": "^2.5.0"
-  }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "private": true
 }
