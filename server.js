@@ -4,10 +4,12 @@ const { TikTokLiveConnection, WebcastEvent, ControlEvent } = require('tiktok-liv
 
 const PORT = process.env.PORT || 3000;
 const clients = new Set();
+// Compte à suivre automatiquement (variable Render TIKTOK_USERNAME, ou dernier @ saisi sur le site)
+let target = (process.env.TIKTOK_USERNAME || '').replace(/^@/, '').trim();
 let conn = null, current = '', stats = { chat: 0, gifts: 0, members: 0 };
 const send = (type, data = {}) => { const m = `data: ${JSON.stringify({ type, ...data })}\n\n`; clients.forEach(c => c.write(m)); };
 
-async function disconnect() { if (conn) { try { conn.disconnect(); } catch {} conn = null; } current = ''; send('status', { connected: false }); }
+async function disconnect(manual) { if (conn) { try { conn.disconnect(); } catch {} conn = null; } current = ''; if (manual) target = ''; send('status', { connected: false }); }
 
 async function connect(username) {
   await disconnect();
@@ -38,10 +40,11 @@ async function connect(username) {
   conn.on(WebcastEvent.MEMBER, () => { stats.members++; pushStats(); });
   conn.on(ControlEvent.WEBSOCKET_CONNECTED, () => console.log('WebSocket TikTok connecté'));
   conn.on(ControlEvent.ERROR, e => { console.error('Erreur TikTok :', e?.info || e?.message || e); send('status', { connected: !!conn, warn: String(e?.info || e?.message || e) }); });
-  conn.on(ControlEvent.DISCONNECTED, () => send('status', { connected: false, error: 'Live déconnecté' }));
-  conn.on(WebcastEvent.STREAM_END, () => send('status', { connected: false, error: 'Le live est terminé' }));
+  const lost = msg => { conn = null; current = ''; send('status', { connected: false, error: msg }); };
+  conn.on(ControlEvent.DISCONNECTED, () => lost('Live déconnecté — reconnexion automatique…'));
+  conn.on(WebcastEvent.STREAM_END, () => lost('Le live est terminé — reconnexion automatique…'));
   const state = await conn.connect();
-  current = username;
+  current = username; target = username;
   send('status', { connected: true, username, roomId: state.roomId });
 }
 
@@ -52,19 +55,30 @@ http.createServer(async (req, res) => {
   if (req.url === '/health') { res.writeHead(200); return res.end('ok'); }
   if (req.url === '/events') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
-    res.write(`data: ${JSON.stringify({ type: 'status', connected: !!conn, username: current })}\n\n`); res.write(`data: ${JSON.stringify({ type: 'stats', ...stats })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'status', connected: !!conn, username: current || target })}\n\n`); res.write(`data: ${JSON.stringify({ type: 'stats', ...stats })}\n\n`);
     clients.add(res); req.on('close', () => clients.delete(res)); return;
   }
   if (req.method === 'POST' && req.url === '/api/connect') {
     const { username } = await body(req);
     res.setHeader('Content-Type', 'application/json');
     if (!username) { res.statusCode = 400; return res.end('{"error":"Pseudo manquant"}'); }
+    target = username.replace(/^@/, '').trim();
     try { await connect(username); res.end('{"ok":true}'); }
     catch (e) { conn = null; res.statusCode = 502; res.end(JSON.stringify({ error: 'Connexion impossible : ' + (e.message || e) + ' (le compte est-il bien en live ?)' })); }
     return;
   }
-  if (req.method === 'POST' && req.url === '/api/disconnect') { await disconnect(); return res.end('{"ok":true}'); }
+  if (req.method === 'POST' && req.url === '/api/disconnect') { await disconnect(true); return res.end('{"ok":true}'); }
   const file = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.split('?')[0]);
   if (!['index.html', 'app.js', 'style.css'].includes(path.relative(__dirname, file))) { res.statusCode = 404; return res.end('Not found'); }
   fs.readFile(file, (e, d) => { if (e) { res.statusCode = 404; return res.end('Not found'); } res.setHeader('Content-Type', types[path.extname(file)] || 'text/plain'); res.end(d); });
 }).listen(PORT, '0.0.0.0', () => console.log(`RBZ Live sur http://localhost:${PORT}`));
+
+// Connexion automatique : tant qu'un compte est défini, le bot (re)tente toutes les 20 s (live pas encore lancé, coupure, redémarrage...)
+let trying = false;
+setInterval(async () => {
+  if (conn || trying || !target) return;
+  trying = true;
+  try { await connect(target); console.log('Connecté automatiquement à', target); }
+  catch (e) { conn = null; send('status', { connected: false, username: target, waiting: true, error: `En attente du live de @${target}… (réessai auto)` }); }
+  trying = false;
+}, 20000);

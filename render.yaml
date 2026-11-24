@@ -9,5 +9,7 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     envVars:
+      - key: TIKTOK_USERNAME  # compte à suivre automatiquement (ex: eiji_rensuke)
+        sync: false
       - key: EULER_API_KEY   # optionnel : à renseigner dans le dashboard Render
         sync: false

@@ -30,3 +30,8 @@ Le dépôt contient un `render.yaml` : sur https://dashboard.render.com → **Ne
 Tu obtiens un lien `https://rbz-live-xxxx.onrender.com` : ouvre-le, entre le @ du live, et c'est parti.
 Optionnel : ajoute `EULER_API_KEY` dans l'onglet *Environment*. Le plan gratuit s'endort après ~15 min sans visite :
 ouvre le site avant ton live et garde l'onglet ouvert.
+
+## Connexion automatique (sans cliquer)
+Ajoute dans Render → Environment : `TIKTOK_USERNAME` (le @ du compte, sans @) et, si tu en as une, `EULER_API_KEY`.
+Le bot se connecte tout seul au démarrage, attend que le live commence (réessai toutes les 20 s) et se reconnecte
+après une coupure. Ne partage jamais ta clé dans un chat : mets-la seulement dans les variables Render.
