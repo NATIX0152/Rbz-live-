@@ -6,10 +6,13 @@ const PORT = process.env.PORT || 3000;
 const clients = new Set();
 // Compte à suivre automatiquement (variable Render TIKTOK_USERNAME, ou dernier @ saisi sur le site)
 let target = (process.env.TIKTOK_USERNAME || '').replace(/^@/, '').trim();
+const TARGET_FILE = path.join(__dirname, '.target');
+if (!target) { try { target = fs.readFileSync(TARGET_FILE, 'utf8').trim(); } catch {} }
+const saveTarget = () => { try { fs.writeFileSync(TARGET_FILE, target); } catch {} };
 let conn = null, current = '', stats = { chat: 0, gifts: 0, members: 0 };
 const send = (type, data = {}) => { const m = `data: ${JSON.stringify({ type, ...data })}\n\n`; clients.forEach(c => c.write(m)); };
 
-async function disconnect(manual) { if (conn) { try { conn.disconnect(); } catch {} conn = null; } current = ''; if (manual) target = ''; send('status', { connected: false }); }
+async function disconnect(manual) { if (conn) { try { conn.disconnect(); } catch {} conn = null; } current = ''; if (manual) { target = ''; saveTarget(); } send('status', { connected: false }); }
 
 async function connect(username) {
   await disconnect();
@@ -62,9 +65,9 @@ http.createServer(async (req, res) => {
     const { username } = await body(req);
     res.setHeader('Content-Type', 'application/json');
     if (!username) { res.statusCode = 400; return res.end('{"error":"Pseudo manquant"}'); }
-    target = username.replace(/^@/, '').trim();
+    target = username.replace(/^@/, '').trim(); saveTarget();
     try { await connect(username); res.end('{"ok":true}'); }
-    catch (e) { conn = null; res.statusCode = 502; res.end(JSON.stringify({ error: 'Connexion impossible : ' + (e.message || e) + ' (le compte est-il bien en live ?)' })); }
+    catch (e) { conn = null; const msg = `En attente du live de @${target}… (réessai auto toutes les 20 s)`; send('status', { connected: false, username: target, error: msg }); res.end(JSON.stringify({ ok: true, waiting: true })); }
     return;
   }
   if (req.method === 'POST' && req.url === '/api/disconnect') { await disconnect(true); return res.end('{"ok":true}'); }

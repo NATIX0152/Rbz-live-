@@ -67,12 +67,14 @@ $('#btn-connect').onclick = async () => {
     if (!r.ok) throw new Error(j.error);
   } catch (e) { connErr = '❌ ' + (['Failed to fetch', 'NOSERVER', 'Load failed'].includes(e.message) ? 'Le serveur du bot ne répond pas : ouvre le site depuis ton serveur (npm start ou Render), pas depuis l\'aperçu Claude' : e.message); renderConn(); }
 };
+let autoTried = false;
 // Flux temps réel du serveur : statut + cadeaux TikTok
 try {
   const es = new EventSource('/events');
   es.onmessage = e => {
     const m = JSON.parse(e.data);
-    if (m.type === 'status') { connected = m.connected; connErr = m.error ? '⚠ ' + m.error : (m.warn ? '⚠ ' + m.warn : ''); if (m.username) { settings.username = m.username; } renderConn(); }
+    if (m.type === 'status') {
+      if (!autoTried && !m.connected && !m.username && settings.username) { autoTried = true; fetch('/api/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: settings.username }) }).catch(() => {}); } connected = m.connected; connErr = m.error ? '⚠ ' + m.error : (m.warn ? '⚠ ' + m.warn : ''); if (m.username) { settings.username = m.username; } renderConn(); }
     if (m.type === 'gift') window.onTikTokGift(m.user, m.coins);
     if (m.type === 'giftunknown') log(`🎁 ${esc(m.user)} a envoyé « ${esc(m.giftName)} » mais sa valeur en coins est illisible — non compté`, 'no');
     if (m.type === 'chat') log(`💬 ${esc(m.user)} : ${esc(m.text)}`, 'no');
