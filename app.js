@@ -122,7 +122,8 @@ $('#btn-plus').onclick = () => { if (auction) { auction.left += 10; drawAuction(
 
 // Cadeau TikTok reçu : ajoute sa valeur en coins au total du spectateur, uniquement pendant le temps de comptage
 window.onTikTokGift = (user, coinValue) => {
-  if (!auction || !(coinValue > 0)) return;
+  if (!(coinValue > 0)) return;
+  if (!auction) return log(`🎁 ${esc(user)} a envoyé ${eur(coinValue)} — pas compté : aucune enchère en cours (clique sur « Démarrer le comptage »)`, 'no');
   const t = auction.gifted[user] = (auction.gifted[user] || 0) + coinValue;
   const counted = t >= settings.minimum;
   log(`🎁 ${esc(user)} +${eur(coinValue)} (total ${eur(t)})${counted ? '' : ' — sous le minimum'}`, counted ? 'ok' : 'no');

@@ -12,18 +12,23 @@ async function disconnect() { if (conn) { try { conn.disconnect(); } catch {} co
 async function connect(username) {
   await disconnect();
   username = username.replace(/^@/, '').trim();
+  const streaks = new Map();
   conn = new TikTokLiveConnection(username, process.env.EULER_API_KEY ? { signApiKey: process.env.EULER_API_KEY } : {});
   // Chaque cadeau est compté dès qu'il arrive. Pour les séries (roses...), on ajoute seulement l'écart depuis le dernier événement.
-  const streaks = new Map();
   conn.on(WebcastEvent.GIFT, d => {
-    const unit = d.diamondCount ?? d.giftDetails?.diamondCount ?? 0; // prix du cadeau en coins
-    const key = (d.user?.userId || d.user?.uniqueId) + ':' + d.giftId;
-    const rep = d.repeatCount || 1;
+    const g = d.gift || {};
+    const unit = Number(g.diamondCount ?? d.diamondCount ?? d.giftDetails?.diamondCount ?? 0); // prix du cadeau en coins
+    const streakable = (g.type ?? d.giftType) === 1;
+    const u = d.user || {};
+    const who = u.uniqueId || u.displayId || u.nickname || String(u.userId || u.id || 'inconnu');
+    const key = String(u.userId || u.id || who) + ':' + String(d.giftId || g.id);
+    const rep = Number(d.repeatCount) || 1;
     let n = rep;
-    if (d.giftType === 1) { n = rep - (streaks.get(key) || 0); if (d.repeatEnd) streaks.delete(key); else streaks.set(key, rep); }
+    if (streakable) { n = rep - (streaks.get(key) || 0); if (d.repeatEnd) streaks.delete(key); else streaks.set(key, rep); }
     const coins = unit * Math.max(n, 0);
-    if (process.env.DEBUG) console.log('GIFT', d.user?.uniqueId, coins, JSON.stringify(d).slice(0, 300));
-    if (coins > 0) send('gift', { user: '@' + (d.user?.uniqueId || 'inconnu'), coins, giftName: d.giftName || d.giftDetails?.giftName || '' });
+    console.log('GIFT', who, g.name || d.giftId, 'x' + n, '=', coins, 'coins');
+    if (coins > 0) send('gift', { user: '@' + who, coins, giftName: g.name || '' });
+    else console.warn('Cadeau sans valeur lisible :', JSON.stringify(d, (k, x) => typeof x === 'bigint' ? String(x) : x).slice(0, 400));
   });
   conn.on(WebcastEvent.DISCONNECTED, () => send('status', { connected: false, error: 'Live déconnecté' }));
   conn.on(WebcastEvent.STREAM_END, () => send('status', { connected: false, error: 'Le live est terminé' }));
