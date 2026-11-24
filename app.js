@@ -74,6 +74,7 @@ try {
     const m = JSON.parse(e.data);
     if (m.type === 'status') { connected = m.connected; connErr = m.error ? '⚠ ' + m.error : (m.warn ? '⚠ ' + m.warn : ''); if (m.username) { settings.username = m.username; } renderConn(); }
     if (m.type === 'gift') window.onTikTokGift(m.user, m.coins);
+    if (m.type === 'giftunknown') log(`🎁 ${esc(m.user)} a envoyé « ${esc(m.giftName)} » mais sa valeur en coins est illisible — non compté`, 'no');
     if (m.type === 'chat') log(`💬 ${esc(m.user)} : ${esc(m.text)}`, 'no');
     if (m.type === 'stats') $('#bot-stats').textContent = `📡 Bot : ${m.chat} messages lus · ${m.gifts} cadeaux détectés · ${m.members} entrées`;
   };

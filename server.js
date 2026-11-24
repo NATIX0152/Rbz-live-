@@ -13,11 +13,11 @@ async function connect(username) {
   await disconnect();
   username = username.replace(/^@/, '').trim();
   const streaks = new Map();
-  conn = new TikTokLiveConnection(username, process.env.EULER_API_KEY ? { signApiKey: process.env.EULER_API_KEY } : {});
+  conn = new TikTokLiveConnection(username, { enableExtendedGiftInfo: true, ...(process.env.EULER_API_KEY ? { signApiKey: process.env.EULER_API_KEY } : {}) });
   // Chaque cadeau est compté dès qu'il arrive. Pour les séries (roses...), on ajoute seulement l'écart depuis le dernier événement.
   conn.on(WebcastEvent.GIFT, d => {
     const g = d.gift || {};
-    const unit = Number(g.diamondCount ?? d.diamondCount ?? d.giftDetails?.diamondCount ?? 0); // prix du cadeau en coins
+    const unit = Number(d.extendedGiftInfo?.diamond_count ?? d.extendedGiftInfo?.diamondCount ?? g.diamondCount ?? d.diamondCount ?? d.giftDetails?.diamondCount ?? 0); // prix du cadeau en coins
     const streakable = (g.type ?? d.giftType) === 1;
     const u = d.user || {};
     const who = u.uniqueId || u.displayId || u.nickname || String(u.userId || u.id || 'inconnu');
@@ -27,9 +27,10 @@ async function connect(username) {
     if (streakable) { n = rep - (streaks.get(key) || 0); if (d.repeatEnd) streaks.delete(key); else streaks.set(key, rep); }
     const coins = unit * Math.max(n, 0);
     stats.gifts++; pushStats();
-    console.log('GIFT', who, g.name || d.giftId, 'x' + n, '=', coins, 'coins');
+    console.log('GIFT', who, g.name || d.extendedGiftInfo?.name || d.giftId, 'x' + n, '=', coins, 'coins');
     if (coins > 0) send('gift', { user: '@' + who, coins, giftName: g.name || '' });
-    else console.warn('Cadeau sans valeur lisible :', JSON.stringify(d, (k, x) => typeof x === 'bigint' ? String(x) : x).slice(0, 400));
+    else send('giftunknown', { user: '@' + who, giftName: g.name || d.extendedGiftInfo?.name || String(d.giftId || '') });
+    if (!(coins > 0)) console.warn('Cadeau sans valeur lisible :', JSON.stringify(d, (k, x) => typeof x === 'bigint' ? String(x) : x).slice(0, 400));
   });
   stats = { chat: 0, gifts: 0, members: 0 };
   const pushStats = () => send('stats', stats);
