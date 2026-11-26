@@ -1,0 +1,77 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Enchères TikTok</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="app">
+<aside>
+  <div class="brand">🔨 <span>Enchères <b>LIVE</b></span></div>
+  <nav>
+    <button data-tab="auction" class="on">🏆 Enchère</button>
+    <button data-tab="settings">⚙️ Réglages</button>
+    <button data-tab="bot">🤖 Bot TikTok</button>
+    <button data-tab="history">📜 Historique & chat</button>
+    <button data-tab="overlay">📺 Overlay OBS</button>
+  </nav>
+  <div class="status"><span id="botdot" class="dot"></span><span id="bottxt">Bot déconnecté</span></div>
+</aside>
+<main>
+<section id="tab-auction">
+  <h1>Enchère en direct <span id="badge" class="badge">En attente</span></h1>
+  <p class="sub">Chaque cadeau détecté dans le live est compté automatiquement.</p>
+  <div id="win" class="win hide"></div>
+  <div class="card"><div id="timer" class="timer">01:00</div>
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button class="btn start" data-cmd="start">▶ Démarrer</button>
+      <button class="btn pause" data-cmd="pause">⏸ Pause</button>
+      <button class="btn reset" data-cmd="reset">↺ Reset</button>
+      <button class="btn" data-add="-30">−30s</button><button class="btn" data-add="-10">−10s</button>
+      <button class="btn" data-add="10">+10s</button><button class="btn" data-add="30">+30s</button>
+    </div></div>
+  <div class="grid g4">
+    <div class="card stat"><div class="v" id="total">0</div><div class="l">🪙 Pièces totales</div></div>
+    <div class="card stat"><div class="v" id="parts">0</div><div class="l">👥 Participants</div></div>
+    <div class="card stat"><div class="v" id="gifts">0</div><div class="l">🎁 Cadeaux</div></div>
+    <div class="card stat"><div class="v" id="top">–</div><div class="l">👑 Meilleure enchère</div></div>
+  </div>
+  <div class="card"><h3>Classement</h3><ul class="lb" id="lb"></ul><div id="lbempty" class="empty">Aucune enchère pour l'instant.</div></div>
+</section>
+
+<section id="tab-settings" class="hide">
+  <h1>Réglages</h1><p class="sub">Appliqués immédiatement.</p>
+  <div class="card"><div class="row">
+    <div class="field"><label>Durée (secondes)</label><input type="number" id="s-duration" min="5"></div>
+    <div class="field"><label>Mise minimum (pièces)</label><input type="number" id="s-minBid" min="0"></div>
+    <div class="field"><label>Fenêtre anti-snipe (s)</label><input type="number" id="s-snipeDelay" min="0"></div>
+    <div class="field"><label>Temps bonus (s)</label><input type="number" id="s-bonusTime" min="0"></div>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <label class="chk"><input type="checkbox" id="s-bonusEnabled"> Ajouter du temps si enchère dans la fenêtre anti-snipe</label>
+    <label class="chk"><input type="checkbox" id="s-tieOvertime"> Prolongation en cas d'égalité</label>
+  </div>
+  <div style="margin-top:14px"><button class="btn primary" id="save">Enregistrer</button></div></div>
+  <div class="card"><h3>Simuler un cadeau (test sans live)</h3><div class="row">
+    <div class="field"><label>Pseudo</label><input id="sim-n" value="Cool Streamer"></div>
+    <div class="field"><label>Cadeau</label><select id="sim-g"><option value="Rose|1">Rose (1)</option><option value="Heart Me|1">Heart Me (1)</option><option value="Doughnut|30">Doughnut (30)</option><option value="Perfume|20">Perfume (20)</option><option value="Gift Box|99">Gift Box (99)</option><option value="Lion|29999">Lion (29 999)</option></select></div>
+    <div class="field"><label>Quantité</label><input type="number" id="sim-c" value="1" min="1"></div>
+    <button class="btn primary" id="sim">Envoyer</button></div></div>
+</section>
+
+<section id="tab-bot" class="hide">
+  <h1>Bot TikTok</h1><p class="sub">Le bot se connecte au chat du live et détecte chaque cadeau.</p>
+  <div class="card"><div class="row">
+    <div class="field" style="flex:3"><label>Pseudo TikTok du streamer (sans @)</label><input id="b-user" placeholder="ex : mon_pseudo"></div>
+    <button class="btn primary" id="b-con">Connecter</button><button class="btn reset" id="b-dis">Déconnecter</button></div>
+    <p id="b-err" style="color:#ff8aa0"></p>
+    <p class="sub">⚠️ Le streamer doit être <b>en live</b>. Seuls les cadeaux reçus <b>pendant que l'enchère est démarrée</b> sont comptés. Les combos sont comptés une fois terminés.</p></div>
+</section>
+
+<section id="tab-history" class="hide">
+  <h1>Historique & chat</h1><p class="sub">&nbsp;</p>
+  <div class="grid g2"><div class="card"><h3>Cadeaux comptés</h3><div class="log" id="glog"></div></div>
+  <div class="card"><h3>Chat du live</h3><div class="log" id="clog"></div></div></div>
+</section>
+
+<section id="tab-overlay" class="hide">
+  <h1>Overlay OBS</h1><p class="sub">Ajoute une source « Navigateur » dans OBS / TikTok LIVE Studio.</p>
+  <div class="card"><label>URL de l'overlay</label><div class="row"><input id="ov-url" readonly style="flex:1"><button class="btn" id="ov-copy">Copier</button><a class="btn" href="overlay.html" target="_blank">Ouvrir</a></div>
+  <p class="sub">Taille conseillée : 420 × 600, fond transparent.</p></div>
+</section>
+</main></div>
+<script src="app.js"></script></body></html>
