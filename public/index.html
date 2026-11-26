@@ -16,14 +16,7 @@
   <h1>Enchère en direct <span id="badge" class="badge">En attente</span></h1>
   <p class="sub">Chaque cadeau détecté dans le live est compté automatiquement.</p>
   <div id="win" class="win hide"></div>
-  <div class="card"><div id="timer" class="timer">01:00</div>
-    <div class="row" style="justify-content:center;margin-top:8px">
-      <button class="btn start" data-cmd="start">▶ Démarrer</button>
-      <button class="btn pause" data-cmd="pause">⏸ Pause</button>
-      <button class="btn reset" data-cmd="reset">↺ Reset</button>
-      <button class="btn" data-add="-30">−30s</button><button class="btn" data-add="-10">−10s</button>
-      <button class="btn" data-add="10">+10s</button><button class="btn" data-add="30">+30s</button>
-    </div></div>
+  <div class="card"><div id="timer" class="timer">01:00</div></div>
   <div class="grid g4">
     <div class="card stat"><div class="v" id="total">0</div><div class="l">🪙 Pièces totales</div></div>
     <div class="card stat"><div class="v" id="parts">0</div><div class="l">👥 Participants</div></div>
@@ -31,6 +24,14 @@
     <div class="card stat"><div class="v" id="top">–</div><div class="l">👑 Meilleure enchère</div></div>
   </div>
   <div class="card"><h3>Classement</h3><ul class="lb" id="lb"></ul><div id="lbempty" class="empty">Aucune enchère pour l'instant.</div></div>
+  <div class="card" style="margin-top:48px"><h3>Contrôles</h3>
+    <div class="row">
+      <button class="btn start" data-cmd="start">▶ Démarrer</button>
+      <button class="btn pause" data-cmd="pause">⏸ Pause</button>
+      <button class="btn reset" data-cmd="reset">↺ Reset</button>
+      <button class="btn" data-add="-30">−30s</button><button class="btn" data-add="-10">−10s</button>
+      <button class="btn" data-add="10">+10s</button><button class="btn" data-add="30">+30s</button>
+    </div></div>
 </section>
 
 <section id="tab-settings" class="hide">
